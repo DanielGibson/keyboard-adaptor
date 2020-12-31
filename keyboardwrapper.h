@@ -9,6 +9,7 @@
 #include "Arduino.h"
 //add your includes for the project keyboardwrapper here
 
+#include "DGHelpers.hpp"
 
 //end of add your includes here
 
