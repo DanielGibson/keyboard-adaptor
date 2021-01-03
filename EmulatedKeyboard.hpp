@@ -1,6 +1,6 @@
 /*
- * Keyboard emulated by the Arduino, looks like real keyboard to the host connected to Arduinos USB port
- * Uses USB Scancodes (like SDL_Scancode), not ASCII chars!
+ * Keyboard emulated by the Arduino, looks like a real keyboard to the host connected to Arduinos USB port
+ * Uses USB Scancodes (kinda like SDL_Scancode), not ASCII chars!
  *
  * (C) 2021 Daniel Gibson
  *
@@ -40,7 +40,7 @@ public:
 		// regular keys supported and handled with the USB HID Boot Keyboard Protocol
 		// See Chapter 10 "Keyboard/Keypad Page (0x07)" in hut1_12_v2.pdf ("USB - HID Usage Tables")
 		NUM_BOOT_KEYS = 6,    // 6 keys at once
-		MAX_NORMAL_KEY = 164, // ExSel (0xA4) (max scancode handled via Boot Keyboard protocol)
+		MAX_NORMAL_KEY = 0xE7, // RGUI (max scancode handled via Boot Keyboard protocol)
 		// Modifier keys (first byte in Boot Keyboard Protocol), also Keyboard/Keypad Page
 		MIN_MODIFIER = 224,   // Left CTRL (0xE0)
 		MAX_MODIFIER = 231,   // Right GUI (0xE7)
@@ -51,7 +51,7 @@ public:
 		MAX_MM_KEY = 0x29C // "AC Distribute Vertically" - whatever, it's the last value in that HID Page
 	};
 
-	// USB HID Boot Keyboard-compatible keyreport
+	// standard USB HID Boot Keyboard-compatible keyreport
 	typedef struct
 	{
 		uint8_t modifiers; // Ctrl, Shift, Alt etc
@@ -59,12 +59,12 @@ public:
 		uint8_t keys[NUM_BOOT_KEYS]; // up to 6 scancodes for keys
 	} BootKeyReport;
 
-	// keyreport for multimedia keys (USB HID "consumer page")
+	// custom keyreport for multimedia keys (USB HID "consumer page")
 	typedef struct
 	{
-		uint8_t reportId;
+		uint8_t reportID;
 		uint8_t padding; // no idea if this makes sense, but this way we get 8 bytes all in all
-		uint16_t keys[NUM_MM_KEYS];
+		uint16_t keys[NUM_MM_KEYS]; // three multimedia keys pressed at once should suffice..
 	} ConsumerKeyReport;
 
 private:
@@ -72,8 +72,9 @@ private:
 	HIDSubDescriptor hidNode;
 
 	BootKeyReport standardKeys = {};
+	ConsumerKeyReport mmKeys = {};
 
-	// TODO: bitfield for all keys?
+	// TODO: LEDs
 
 public:
 
