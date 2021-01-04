@@ -63,6 +63,7 @@ void HIDSelector::ParseHIDData(USBHID *hid, uint8_t ep, bool has_rpt_id, uint8_t
 		for (uint8_t i = 0; i < len; i++) {
 			PrintAll(AsHex(buf[i]), F(" "));
 		}
+		PrintlnAll();
 	}
 #endif
 }
@@ -105,14 +106,17 @@ void loop()
 	{
 		buttonState = newButtonState;
 		if(newButtonState == LOW) {
-			emuKB.Press(225); // LSHIFT
-			emuKB.Press(7); // 'd' => 'D'
+			//emuKB.Press(225); // LSHIFT
+			//emuKB.Press(7); // 'd' => 'D'
+			emuKB.Press(255+0xCD); // Play/Pause
 
 		} else {
-			emuKB.Release(7);
-			emuKB.Release(225); // LSHIFT
+			//emuKB.Release(7);
+			//emuKB.Release(225); // LSHIFT
+			emuKB.Release(255+0xCD); // Play/Pause
 		}
 		emuKB.Send();
+		PrintlnAll("LED state: ", emuKB.GetLeds());
 	}
 
 }
