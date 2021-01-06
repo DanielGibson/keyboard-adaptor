@@ -118,12 +118,12 @@ static const uint8_t _hidReportDescriptorConsumerDevice[] PROGMEM = {
 	0x09, 0x01,                              /* usage -- consumer control */
 	0xA1, 0x01,                              /* collection (application) */
 	0x85, EmulatedKeyboard::MM_DEV_REPORTID, /* Report ID */
-	/* 4 Media Keys */
+	/* 3 (NUM_MM_KEYS) Media Keys */
 	0x15, 0x00,                              /* logical minimum */
 	0x26, CC_MAX[0], CC_MAX[1],              /* logical maximum (0x514) */
 	0x19, 0x00,                              /* usage minimum (0) */
 	0x2A, CC_MAX[0], CC_MAX[1],              /* usage maximum (0x514) */
-	0x95, EmulatedKeyboard::NUM_MM_KEYS,     /* report count (4) */
+	0x95, EmulatedKeyboard::NUM_MM_KEYS,     /* report count (3) */
 	0x75, 0x10,                              /* report size (16) */
 	0x81, 0x00,                              /* input */
 	0xC0 /* end collection */

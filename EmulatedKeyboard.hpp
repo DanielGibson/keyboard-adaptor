@@ -83,9 +83,10 @@ public:
 		// Modifier keys (first byte in Boot Keyboard Protocol), also Keyboard/Keypad Page
 		MIN_MODIFIER = 224,   // Left CTRL (0xE0)
 		MAX_MODIFIER = 231,   // Right GUI (0xE7)
+		NUM_MODIFIERS = MAX_MODIFIER - MIN_MODIFIER + 1,
 		// Multimedia keys like Play, Pause, Start Calculator, ...
 		// See Chapter 15 "USB HID Consumer Page (0x0C)"
-		NUM_MM_KEYS = 4,     // I think we won't need more than 3 such keys pressed at the same time
+		NUM_MM_KEYS = 3,     // I think we won't need more than 3 such keys pressed at the same time
 		MAX_MM_KEY = 0x514,  // "Contact Misc." - whatever, it's the last value in that HID Page
 		MM_DEV_REPORTID = 3, // Report ID for the multimedia keys/consumer control device
 
@@ -113,7 +114,10 @@ public:
 	// custom keyreport for multimedia keys (USB HID "consumer page")
 	struct ConsumerKeyReport
 	{
-		uint16_t keys[NUM_MM_KEYS]; // four multimedia keys pressed at once should suffice..
+		// 3 multimedia keys pressed at once should suffice
+		// and with this the whole key report (incl. ReportID) will be 7 bytes
+		// which should help compatibility (reportedly some devices don't like >8 bytes)
+		uint16_t keys[NUM_MM_KEYS];
 	};
 
 protected:
