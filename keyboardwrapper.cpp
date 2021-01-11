@@ -1,5 +1,11 @@
-// Do not remove the include below
+
+// Do not remove the include below (says the Sloeber IDE)
 #include "keyboardwrapper.h"
+
+#ifndef CDC_DISABLED
+// uncomment to log some debug info to the Serial console
+//#define KBDWRAP_ENABLE_DEBUG
+#endif
 
 #include "EmulatedKeyboard.hpp"
 
@@ -8,10 +14,6 @@
 
 #include <hidcomposite.h>
 
-#include <hidescriptorparser.h>
-
-enum { ButtonPin = 4 };
-
 static EmulatedKeyboard emuKB;
 
 USB     UsbHost;
@@ -19,17 +21,13 @@ USB     UsbHost;
 // (like my old IBM thinkpad-style keyboard)?
 //USBHub     Hub(&Usb);
 
-#ifndef CDC_DISABLED
-// uncomment to log some debug info to the Serial console
-//#define KBDWRAP_ENABLE_DEBUG
-#endif
-
 
 class InputKeyboard : public HIDComposite
 {
 	using EmuKB = EmulatedKeyboard;
 
 	uint8_t curLedState = 0;
+
 	uint8_t oldModifierState = 0;
 	uint8_t oldNormalKeysState[EmuKB::NUM_BOOT_KEYS] = {};
 	uint16_t oldMMKeysState[EmuKB::NUM_MM_KEYS] = {}; // as consumer page usage ID, *not* EmuKB scancode!
@@ -84,7 +82,7 @@ class InputKeyboard : public HIDComposite
 		const __FlashStringHelper* devName = nullptr;
 
 		// for some reason, with the QPad MK-75 this->PID and this->VID are wrong
-		// but fetching them again gives the correct result.. so fetch them again.
+		// but fetching them again gives the correct results.. so fetch them again.
 		uint16_t vid, pid;
 		GetUSBID(vid, pid);
 
@@ -95,10 +93,10 @@ class InputKeyboard : public HIDComposite
 
 		switch(CMB_USB_ID(vid, pid))
 		{
-			// Holtek - Gaming keyboard, like MK-Gaming K-GK2 (and probably other keyboards with same chip)
+			// Holtek - Gaming keyboard, like KM-Gaming K-GK2 (and probably other keyboards with same chip)
 			case CMB_USB_ID(0x04d9, 0xa1cd):
 				devName = F("Holtek/KM-Gaming K-GK2");
-				// boot keyboard is 1, 0
+				// boot keyboard is 1, 0 (EndPoint 1, Report ID 0)
 				mmKeysEP = 2;
 				mmKeysReportID = 2;
 				// the remaining settings can use the default value
@@ -394,10 +392,31 @@ public:
 			curLedState = ledState;
 		}
 	}
+
+	void Suspend()
+	{
+		// disabling SOF (Start-of-Frame) marker generation will cause the connected
+		// keyboard to suspend after a few milliseconds without traffic
+		// (for that you also need to stop calling UsbHost.Task())
+		uint8_t mode = pUsb->regRd(rMODE) & ~bmSOFKAENAB;
+		pUsb->regWr(rMODE, mode);
+
+		emuKB.ReleaseAll();
+	}
+
+	void Resume()
+	{
+		// re-enable SOF so the keyboard wakes up again
+		uint8_t mode = pUsb->regRd(rMODE) | bmSOFKAENAB;
+		pUsb->regWr(rMODE, mode);
+
+		SetLEDs(emuKB.GetLeds(), true); // force syncing LEDs on resume
+	}
 };
 
 static InputKeyboard inputKB(&UsbHost);
 
+enum { ButtonPin = 4 };
 void setup()
 {
 	pinMode(ButtonPin, INPUT_PULLUP);
@@ -449,8 +468,23 @@ void loop()
 		PrintlnAll(F("LED state: "), emuKB.GetLeds());
 	}
 
-	UsbHost.Task(); // USB Host shield event processing or whatever
-	inputKB.SetLEDs(emuKB.GetLeds());
-	emuKB.Send();
+	static bool wasSuspended = false;
+	bool isSuspended = USBDevice.isSuspended();
+	if(isSuspended != wasSuspended)
+	{
+		isSuspended ? inputKB.Suspend() : inputKB.Resume();
 
+		wasSuspended = isSuspended;
+	}
+
+	if(!isSuspended)
+	{
+		UsbHost.Task(); // USB Host shield event processing or whatever
+		inputKB.SetLEDs(emuKB.GetLeds());
+		emuKB.Send();
+	}
+	else // currently suspended
+	{
+		delay(250); // sleep a bit
+	}
 }
