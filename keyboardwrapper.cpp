@@ -273,7 +273,7 @@ public:
 			newKeys[i] = usageID;
 			if(usageID != 0 && FindInArray(usageID, oldMMKeysState, EmuKB::NUM_MM_KEYS) == -1)
 			{
-				emuKB.Press(usageID+255); // remember: scancode is consumer key hid usageID + 255
+				emuKB.Press(usageID + EmuKB::MM_SC_OFFSET); // remember: scancode is consumer key hid usageID + EmuKB::MM_SC_OFFSET
 			}
 		}
 
@@ -282,7 +282,7 @@ public:
 			uint16_t oldUsageID = oldMMKeysState[i];
 			if(oldUsageID != 0 && FindInArray(oldUsageID, newKeys, numNewKeys) == -1)
 			{
-				emuKB.Release(oldUsageID + 255); // remember: scancode is consumer key hid usageID + 255
+				emuKB.Release(oldUsageID + EmuKB::MM_SC_OFFSET);
 			}
 			oldMMKeysState[i] = (i<numNewKeys) ? newKeys[i] : 0;
 		}
@@ -313,7 +313,7 @@ public:
 					uint8_t bit = 1 << i;
 					if(diffBits & bit)
 					{
-						uint16_t scancode = bytesUsageIDs[byteIdx][i] + 255;
+						uint16_t scancode = bytesUsageIDs[byteIdx][i] + EmuKB::MM_SC_OFFSET;
 						bool pressed = (newByte & bit) != 0;
 						pressed ? emuKB.Press(scancode) : emuKB.Release(scancode);
 					}
@@ -366,8 +366,9 @@ public:
 						uint16_t oldUsageID = oldMMKeysState[0];
 						if(usageID != oldUsageID)
 						{
-							if(oldUsageID != 0)  emuKB.Release(oldUsageID + 255); // remember: scancode is consumer key hid usage + 255
-							if(usageID != 0)     emuKB.Press(usageID + 255);
+							if(oldUsageID != 0)  emuKB.Release(oldUsageID + EmuKB::MM_SC_OFFSET);
+							// remember: scancode is consumer key hid usage + EmuKB::MM_SC_OFFSET
+							if(usageID != 0)     emuKB.Press(usageID + EmuKB::MM_SC_OFFSET);
 							oldMMKeysState[0] = usageID;
 						}
 					}

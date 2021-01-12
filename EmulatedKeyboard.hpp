@@ -9,13 +9,13 @@
  *
  * Uses 16bit (uint16_t) Scancodes (kinda like SDL_Scancode), not ASCII chars!
  *
- * - Scancodes < 255 correspond to HID Usage IDs of the HID Keyboard/Keypad Page (0x07)
- * - Scancodes >= 255 are for "Multimedia Keys" like Play/Pause, start Calculator etc
- *   and are based on HID Usage IDs of the HID Consumer Page (0x0C)
- *   !! BUT WITH 255 ADDED TO THEM !!   (to avoid clashes with normal keyboard keys).
- *   So don't forget to add/subtract 255 to/from multimedia keys when handling them.
- * - For reference, up to 231/0xE7 aka Right GUI/Windows key they're identical to
- *   SDL_Scancode - but keep in mind that Volume Up/Down and Mute on real keyboards is
+ * - Scancodes <= 255 correspond to HID Usage IDs of the HID Keyboard/Keypad Page (0x07)
+ * - Scancodes >= 256 (MM_SC_OFFSET) are for "Multimedia Keys" like Play/Pause,
+ *   start Calculator etc and are based on HID Usage IDs of the HID Consumer Page (0x0C)
+ *   !! BUT WITH 256 ADDED TO THEM !!   (to avoid clashes with normal keyboard keys).
+ *   So don't forget to add/subtract 256 (MM_SC_OFFSET) when handling multimedia keys.
+ * - For reference, up to 231/0xE7 aka Right GUI/Windows key our Scancodes are identical
+ *   to SDL_Scancode - but keep in mind that Volume Up/Down and Mute on real keyboards is
  *   usually done via Consumer Page "Audio Control" keys and *not* Scancodes 127-129.
  *   The Multimedia/Consumer Page scancodes do *not* correspond to SDL2 scancodes, as
  *   SDL2 doesn't have a simple mapping to those keys (and only supports a subset).
@@ -89,6 +89,7 @@ public:
 		NUM_MM_KEYS = 3,     // I think we won't need more than 3 such keys pressed at the same time
 		MAX_MM_KEY = 0x514,  // "Contact Misc." - whatever, it's the last value in that HID Page
 		MM_DEV_REPORTID = 3, // Report ID for the multimedia keys/consumer control device
+		MM_SC_OFFSET = 256,  // Added to multimedia consumer control Usage IDs to get our Scancode
 
 		// Values for LEDs Bitmask (it can hold 8 bits, even though the higher ones are a bit obscure)
 		// (Based on "LED Page (0x08)" in the HID Usage Tables document,

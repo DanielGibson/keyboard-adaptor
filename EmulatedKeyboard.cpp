@@ -9,13 +9,13 @@
  *
  * Uses 16bit (uint16_t) Scancodes (kinda like SDL_Scancode), not ASCII chars!
  *
- * - Scancodes < 255 correspond to HID Usage IDs of the HID Keyboard/Keypad Page (0x07)
- * - Scancodes >= 255 are for "Multimedia Keys" like Play/Pause, start Calculator etc
- *   and are based on HID Usage IDs of the HID Consumer Page (0x0C)
- *   !! BUT WITH 255 ADDED TO THEM !!   (to avoid clashes with normal keyboard keys).
- *   So don't forget to add/subtract 255 to/from multimedia keys when handling them.
- * - For reference, up to 231/0xE7 aka Right GUI/Windows key they're identical to
- *   SDL_Scancode - but keep in mind that Volume Up/Down and Mute on real keyboards is
+ * - Scancodes <= 255 correspond to HID Usage IDs of the HID Keyboard/Keypad Page (0x07)
+ * - Scancodes >= 256 (MM_SC_OFFSET) are for "Multimedia Keys" like Play/Pause,
+ *   start Calculator etc and are based on HID Usage IDs of the HID Consumer Page (0x0C)
+ *   !! BUT WITH 256 ADDED TO THEM !!   (to avoid clashes with normal keyboard keys).
+ *   So don't forget to add/subtract 256 (MM_SC_OFFSET) when handling multimedia keys.
+ * - For reference, up to 231/0xE7 aka Right GUI/Windows key our Scancodes are identical
+ *   to SDL_Scancode - but keep in mind that Volume Up/Down and Mute on real keyboards is
  *   usually done via Consumer Page "Audio Control" keys and *not* Scancodes 127-129.
  *   The Multimedia/Consumer Page scancodes do *not* correspond to SDL2 scancodes, as
  *   SDL2 doesn't have a simple mapping to those keys (and only supports a subset).
@@ -284,7 +284,7 @@ static uint16_t mapKey(uint16_t scancode)
 
 	// See Chapter 10 "Keyboard/Keypad Page (0x07)" in hut1_21_0.pdf ("HID Usage Tables for USB")
 	// for the meaning of the scancode values ("Usage  ID") of "normal keys" (not multimedia keys)
-	if(scancode < 255)
+	if(scancode < EmulatedKeyboard::MM_SC_OFFSET)
 	{
 		switch(uint8_t(scancode))
 		{
@@ -292,19 +292,20 @@ static uint16_t mapKey(uint16_t scancode)
 			case 0x39: // capslock
 				return 0xE4; // right CTRL
 			// NOTE: if you want to return a multimedia key here, you need to return
-			//       255 + mm_key_consumer_usage_ID; !
+			//       EmulatedKeyboard::MM_SC_OFFSET + mm_key_consumer_usage_ID; !
 		}
 	}
 	else // "consumer page" key (multimedia key)
 	{
 		// See Chapter 15 "USB HID Consumer Page (0x0C)" in hut1_21_0.pdf
-		uint16_t consumerUsageID = scancode - 255;
+		uint16_t consumerUsageID = scancode - EmulatedKeyboard::MM_SC_OFFSET;
 		switch(consumerUsageID)
 		{
 			// example: map the mute key to play/pause
 			case 0xE2: // Mute
-				return 255 + 0xCD; // Play/Pause
-			// NOTE that the scancodes for consumer page keys are 255 + consumer_usage_ID
+				return EmulatedKeyboard::MM_SC_OFFSET + 0xCD; // Play/Pause
+			// NOTE that the scancodes for consumer page keys are
+			//      EmulatedKeyboard::MM_SC_OFFSET + consumer_usage_ID
 			//      (so they don't clash with the normal keyboard keys scancodes)
 		}
 	}
@@ -348,9 +349,9 @@ void EmulatedKeyboard::Press(uint16_t scancode)
 			haveUnsentNormalKey = true;
 		}
 	}
-	else if(scancode > 255) // multimedia key
+	else if(scancode >= MM_SC_OFFSET) // multimedia key
 	{
-		uint16_t consumerUsageID = scancode - 255;
+		uint16_t consumerUsageID = scancode - MM_SC_OFFSET;
 		uint8_t insIdx = NUM_MM_KEYS+1;
 		for(uint8_t i=0; i < NUM_MM_KEYS; ++i)
 		{
@@ -409,9 +410,9 @@ void EmulatedKeyboard::Release(uint16_t scancode)
 			haveUnsentNormalKey = true;
 		}
 	}
-	else if(scancode > 255) // multimedia key (consumer page)
+	else if(scancode >= MM_SC_OFFSET) // multimedia key (consumer page)
 	{
-		uint16_t consumerUsageID = scancode - 255;
+		uint16_t consumerUsageID = scancode - MM_SC_OFFSET;
 		uint8_t remIdx = NUM_MM_KEYS+1;
 		for(uint8_t i=0; i < NUM_MM_KEYS; ++i)
 		{
