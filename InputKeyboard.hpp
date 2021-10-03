@@ -40,6 +40,8 @@
 #ifndef INPUTKEYBOARD_HPP_
 #define INPUTKEYBOARD_HPP_
 
+#include "KeyboardCommon.hpp"
+
 #include <hidcomposite.h>
 // TODO: get rid of dependency to EmulatedKeyboard (duplicate some constants, put others in common header)
 #include "EmulatedKeyboard.hpp"

@@ -65,7 +65,7 @@
 #ifndef EMULATEDKEYBOARD_HPP_
 #define EMULATEDKEYBOARD_HPP_
 
-#include "keyboardwrapper.h"
+#include "KeyboardCommon.hpp"
 
 #include "HID.h"
 

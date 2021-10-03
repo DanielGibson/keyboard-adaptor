@@ -1,11 +1,5 @@
 
-// Do not remove the include below (says the Sloeber IDE)
-#include "keyboardwrapper.h"
-
-#ifndef CDC_DISABLED
-// uncomment to log some debug info to the Serial console
-//#define KBDWRAP_ENABLE_DEBUG
-#endif
+#include "KeyboardCommon.hpp"
 
 #include "EmulatedKeyboard.hpp"
 
