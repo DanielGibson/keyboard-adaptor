@@ -1,12 +1,6 @@
 /*
  * Some helper functions for Arduino Projects
  *
- * HexPrinter::printTo() is based on PrintHex() from the USB Host Shield Library 2.0
- * Copyright (C) 2011 Circuits At Home, LTD. All rights reserved.
- * Licensed under GPLv2 or later
- *
- * The *remaining* code in this file is
- *
  * Copyright (C) 2021 Daniel Gibson
  *
  *  This software is dual-licensed to the public domain and under the following
@@ -38,22 +32,28 @@ struct HexPrinter final : public Printable
 
 	size_t printTo(Print& p) const override
 	{
-#if 1
-		// stolen from usb host shield lib's printhex.h
-		int num_nibbles = sizeof (INT_T) * 2;
 		size_t ret = 0;
 
-		do {
-			char v = 48 + (((val >> (num_nibbles - 1) * 4)) & 0x0f);
-			if(v > 57)
-				v += 7;
-			ret += p.print(v);
-		} while(--num_nibbles);
+		// Number of nibbles
+		size_t numnibbles = sizeof(INT_T) * 2;
+
+		// Assume that we'll get 64 bits at max.
+		uint64_t converted = (uint64_t)val;
+
+		// For little endian only!
+		for (int n = numnibbles; n != 0; n--) {
+			// Extract nibble...
+			uint32_t nibble = (converted >> (4 * (n - 1))) & 0x0F;
+
+			// ...and print it.
+			if (nibble <= 9) {
+				ret += p.print((char)nibble + '0');
+			} else {
+				ret += p.print((char)nibble - 10 + 'A');
+			}
+		}
 
 		return ret;
-#else
-		return p.print(val, 16); // this doesn't prepend '0' nibbles
-#endif
 	}
 };
 
