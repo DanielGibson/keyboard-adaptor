@@ -142,6 +142,34 @@ void InputKeyboard::DetectDevice()
 			//       ^- that's the bit for 'A' (bit 5 for HID Usage ID 4, as bit 0 aka 1 is used for usage ID 0)
 			// (+ additional, independent, keyboard boot protocol report for the other 6 keys that's left out here)
 			break;
+		
+		// SONiX (SPC Gear) GK630 Gaming Keyboard
+		case CMB_USB_ID(0x3299, 0x4e61):
+			devName = F("SPC Gear/SONiX GK630");
+			// boot keyboard is 1, 0
+			mmKeysEP = 2;
+			mmKeysReportID = 3;
+			
+			// For NKRO it uses EP 2 Report ID 1 - but only if more than 6 (non-modifier) keys
+			// are pressed, otherwise the boot keyboard device is used (which just works).
+			// There seem to be 16 bytes all in all: The Report ID and then 15 bytes (120 bits)
+			// representing keys A (0x04) to F21 (0x70 == 112) - yes, that should only be 108 bits, no idea.
+			// Example data (incl. Report ID!) when pressing 6 keys and then 'A':
+			// 01 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+			//     ^- that's the bit for 'A' (bit 1 for HID Usage ID 4, which is the "Usage Minimum" for that report)
+			// (+ additional, independent, keyboard boot protocol report for the other 6 keys that's left out here)
+			break;
+		
+		// Cherry MX 10.0N
+		case CMB_USB_ID(0x046a, 0x00df):
+			devName = F("Cherry MX 10.0N");
+			// interestingly, except for the names and vendor/product IDs, from a USB HID point of view
+			// this is identical to the GK630 - physically it's different (not TKL, different Fn-Key combinations)
+			// maybe Cherry also uses some SONiX chip?
+			mmKeysEP = 2;
+			mmKeysReportID = 3;
+			// NKRO also is handled in the same way as the GK630 does
+			break;
 	}
 
 	if(devName != nullptr)
@@ -161,9 +189,10 @@ bool InputKeyboard::SelectInterface(uint8_t iface, uint8_t proto)
 	PrintlnAll(F("SelectInterface iface: "), iface, F(" proto "), proto);
 #endif
 
-	// from bInterfaceProtocol: 1 is Keyboard, 0 is unspecified
+	// from bInterfaceProtocol: 1 is Keyboard, 0 is unspecified, 2 is Mouse
 	// both are ok (this method is only called if bInterfaceClass is 3, HID)
-	if (proto == 0 || proto == 1)
+	// the GK630 uses the Mouse endpoint for Consumer Control
+	if (proto == 0 || proto == 1 || proto == 2)
 		return true;
 
 	return false;
