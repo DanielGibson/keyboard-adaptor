@@ -23,7 +23,7 @@
  *   that take input from a real USB keyboard (using a USB Host Shield) and passing
  *   this on to a PC, possibly after remapping some keys to others.
  * - Having unified Scancodes for multimedia keys and normal keys makes it easy to
- *   map one kind of key to the other, see mapKey().
+ *   map one kind of key to the other, see mapKey() in keyboard-adaptor.ino
  *
  * Scancodes refer to the key position on the keyboard and *not* their
  * layout-specific keycodes (which are printed on the keys).

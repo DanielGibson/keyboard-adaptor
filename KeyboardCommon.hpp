@@ -1,4 +1,17 @@
 /*
+ * #defines, enum constants and similar used by the whole projects,
+ * i.e. InputKeyboard, EmulatedKeyboard and in keyboard-adaptor.ino
+ *
+ * Both InputKeyboard and EmulatedKeyboard use 16bit scancodes to identify keys.
+ * For "normal" keyboard keys the scancodes (up to 255) are identical to the
+ * HID Usage IDs specified in the HID "Keyboard/Keypad Page (0x07)" in hut1_21_0.pdf
+ * Scancodes for "multimedia keys" aka "Consumer Control" keys (like Play, Pause,
+ * Mute, Start Calculator, ...) are based on the HID Usage IDs from Chapter 15
+ * "USB HID Consumer Page (0x0C)" in hut1_21_0.pdf
+ * EXCEPT that 256 (KBCommon::MM_SC_OFFSET) is added to the usage IDs so they're
+ * distinct from the normal keys.
+ * Having unified Scancodes for multimedia keys and normal keys makes it easy to
+ * map one kind of key to the other, see mapKey() in keyboard-adaptor.ino
  * 
  * Copyright (C) 2021 Daniel Gibson
  *
@@ -26,6 +39,7 @@
 
 // this struct only exists to give the constants a scope, like KBCommon::NUM_BOOT_KEYS
 struct KBCommon {
+	// constants for the USB HID Boot Keyboard protocol and for our Scancodes
 	enum KeyboardConstants {
 		// regular keys supported and handled with the USB HID Boot Keyboard Protocol
 		// See Chapter 10 "Keyboard/Keypad Page (0x07)" in hut1_21_0.pdf ("HID Usage Tables for USB")
@@ -34,10 +48,11 @@ struct KBCommon {
 		// Modifier keys (first byte in Boot Keyboard Protocol), also Keyboard/Keypad Page
 		MIN_MODIFIER = 224,   // Left CTRL (0xE0)
 		MAX_MODIFIER = 231,   // Right GUI (0xE7)
-		NUM_MODIFIERS = MAX_MODIFIER - MIN_MODIFIER + 1,
+		NUM_MODIFIERS = MAX_MODIFIER - MIN_MODIFIER + 1, // 8
+
 		// Multimedia keys like Play, Pause, Start Calculator, ...
 		// See Chapter 15 "USB HID Consumer Page (0x0C)"
-		MM_SC_OFFSET = 256,  // Added to multimedia consumer control Usage IDs to get our Scancode
+		MM_SC_OFFSET = 256,  // Added to multimedia consumer control Usage IDs to get our Scancodes
 
 		// Values for LEDs Bitmask (it can hold 8 bits, even though the higher ones are a bit obscure)
 		// (Based on "LED Page (0x08)" in the HID Usage Tables document,
