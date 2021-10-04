@@ -15,6 +15,40 @@ USB     UsbHost;
 // (like my old IBM thinkpad-style keyboard)?
 //USBHub     Hub(&Usb);
 
+#if 0 // TODO: if you wanna map keys to other keys, do it here (and uncomment the lines in OnKeyPress() and OnKeyRelease())
+static uint16_t mapKey(uint16_t scancode)
+{
+	// See Chapter 10 "Keyboard/Keypad Page (0x07)" in hut1_21_0.pdf ("HID Usage Tables for USB")
+	// for the meaning of the scancode values ("Usage  ID") of "normal keys" (not multimedia keys)
+	if(scancode < EmulatedKeyboard::MM_SC_OFFSET)
+	{
+		switch(uint8_t(scancode))
+		{
+			// example: map capslock to right CTRL
+			case 0x39: // capslock
+				return 0xE4; // right CTRL
+			// NOTE: if you want to return a multimedia key here, you need to return
+			//       EmulatedKeyboard::MM_SC_OFFSET + mm_key_consumer_usage_ID; !
+		}
+	}
+	else // "consumer page" key (multimedia key)
+	{
+		// See Chapter 15 "USB HID Consumer Page (0x0C)" in hut1_21_0.pdf
+		uint16_t consumerUsageID = scancode - EmulatedKeyboard::MM_SC_OFFSET;
+		switch(consumerUsageID)
+		{
+			// example: map the mute key to play/pause
+			case 0xE2: // Mute
+				return EmulatedKeyboard::MM_SC_OFFSET + 0xCD; // Play/Pause
+			// NOTE that the scancodes for consumer page keys are
+			//      EmulatedKeyboard::MM_SC_OFFSET + consumer_usage_ID
+			//      (so they don't clash with the normal keyboard keys scancodes)
+		}
+	}
+	return scancode;
+}
+#endif // 0
+
 class PassthroughKeyboard final : public InputKeyboard
 {
 public:
@@ -27,6 +61,8 @@ public:
 		PrintlnAll(F("PassthroughKeyboard::OnKeyPress( "), AsHex(scancode), F(" )") );
 #endif
 
+		// scancode = mapKey(scancode); // TODO: uncomment if you want to map keys to other keys
+
 		emuKB.Press(scancode);
 	}
 
@@ -36,6 +72,8 @@ public:
 #ifdef KBDWRAP_ENABLE_DEBUG
 		PrintlnAll(F("PassthroughKeyboard::OnKeyRelease( "), AsHex(scancode), F(" )") );
 #endif
+
+		// scancode = mapKey(scancode); // TODO: uncomment if you want to map keys to other keys
 
 		emuKB.Release(scancode);
 	}

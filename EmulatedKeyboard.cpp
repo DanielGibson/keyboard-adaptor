@@ -23,7 +23,7 @@
  *   that take input from a real USB keyboard (using a USB Host Shield) and passing
  *   this on to a PC, possibly after remapping some keys to others.
  * - Having unified Scancodes for multimedia keys and normal keys makes it easy to
- *   map one kind of key to the other, see mapKey().
+ *   map one kind of key to the other, see mapKey() in keyboard-adaptor.ino
  *
  * Scancodes refer to the key position on the keyboard and *not* their
  * layout-specific keycodes (which are printed on the keys).
@@ -277,46 +277,8 @@ static uint8_t scancodeToModifierFlag(uint16_t scancode)
 	return 0;
 }
 
-#if 0
-static uint16_t mapKey(uint16_t scancode)
-{
-	// TODO: if you wanna map keys to other keys, do this here (and uncomment the lines in Press() and Release())
-
-	// See Chapter 10 "Keyboard/Keypad Page (0x07)" in hut1_21_0.pdf ("HID Usage Tables for USB")
-	// for the meaning of the scancode values ("Usage  ID") of "normal keys" (not multimedia keys)
-	if(scancode < EmulatedKeyboard::MM_SC_OFFSET)
-	{
-		switch(uint8_t(scancode))
-		{
-			// example: map capslock to right CTRL
-			case 0x39: // capslock
-				return 0xE4; // right CTRL
-			// NOTE: if you want to return a multimedia key here, you need to return
-			//       EmulatedKeyboard::MM_SC_OFFSET + mm_key_consumer_usage_ID; !
-		}
-	}
-	else // "consumer page" key (multimedia key)
-	{
-		// See Chapter 15 "USB HID Consumer Page (0x0C)" in hut1_21_0.pdf
-		uint16_t consumerUsageID = scancode - EmulatedKeyboard::MM_SC_OFFSET;
-		switch(consumerUsageID)
-		{
-			// example: map the mute key to play/pause
-			case 0xE2: // Mute
-				return EmulatedKeyboard::MM_SC_OFFSET + 0xCD; // Play/Pause
-			// NOTE that the scancodes for consumer page keys are
-			//      EmulatedKeyboard::MM_SC_OFFSET + consumer_usage_ID
-			//      (so they don't clash with the normal keyboard keys scancodes)
-		}
-	}
-	return scancode;
-}
-#endif // 0
-
 void EmulatedKeyboard::Press(uint16_t scancode)
 {
-	// scancode = mapKey(scancode); // TODO: uncomment if you want to map keys to other keys
-
 	if(scancode >= MIN_MODIFIER && scancode <= MAX_MODIFIER)
 	{
 		uint8_t flag = scancodeToModifierFlag(scancode);
@@ -377,8 +339,6 @@ void EmulatedKeyboard::Press(uint16_t scancode)
 
 void EmulatedKeyboard::Release(uint16_t scancode)
 {
-	// scancode = mapKey(scancode); // TODO: uncomment if you want to map keys to other keys
-
 	if(scancode >= MIN_MODIFIER && scancode <= MAX_MODIFIER)
 	{
 		uint8_t flag = scancodeToModifierFlag(scancode);
