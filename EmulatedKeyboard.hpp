@@ -78,30 +78,25 @@ public:
 	enum {
 		// regular keys supported and handled with the USB HID Boot Keyboard Protocol
 		// See Chapter 10 "Keyboard/Keypad Page (0x07)" in hut1_21_0.pdf ("HID Usage Tables for USB")
-		NUM_BOOT_KEYS = 6,    // 6 keys at once
-		MAX_NORMAL_KEY = 0xE7, // RGUI (max scancode handled via Boot Keyboard protocol)
-		// Modifier keys (first byte in Boot Keyboard Protocol), also Keyboard/Keypad Page
-		MIN_MODIFIER = 224,   // Left CTRL (0xE0)
-		MAX_MODIFIER = 231,   // Right GUI (0xE7)
-		NUM_MODIFIERS = MAX_MODIFIER - MIN_MODIFIER + 1,
-		// Multimedia keys like Play, Pause, Start Calculator, ...
-		// See Chapter 15 "USB HID Consumer Page (0x0C)"
-		NUM_MM_KEYS = 3,     // I think we won't need more than 3 such keys pressed at the same time
+		// all the needed constants are in KBCommon::KeyboardConstants (see KeyboardCommon.hpp)
+		
+		// "Consumer Control" Multimedia keys like Play, Pause, Start Calculator, ...
+		// (see Chapter 15 "USB HID Consumer Page (0x0C)")
+		// have their own HID endpoint and HID interface
 		MAX_MM_KEY = 0x514,  // "Contact Misc." - whatever, it's the last value in that HID Page
+		NUM_MM_KEYS = 3,     // I think we won't need more than 3 such keys pressed at the same time
 		MM_DEV_REPORTID = 3, // Report ID for the multimedia keys/consumer control device
-		MM_SC_OFFSET = 256,  // Added to multimedia consumer control Usage IDs to get our Scancode
+	};
 
-		// Values for LEDs Bitmask (it can hold 8 bits, even though the higher ones are a bit obscure)
-		// (Based on "LED Page (0x08)" in the HID Usage Tables document,
-		//  but keep in mind that this is a bitmask, so it's 1 << (hid_usage-1))
-		LED_NumLock_Bit      = 1 << 0, //   1 0x01
-		LED_CapsLock_Bit     = 1 << 1, //   2 0x02
-		LED_ScrollLock_Bit   = 1 << 2, //   4 0x04
-		LED_Compose_Bit      = 1 << 3, //   8 0x08
-		LED_Kana_Bit         = 1 << 4, //  16 0x10
-		LED_Power_Bit        = 1 << 5, //  32 0x20
-		LED_Shift_Bit        = 1 << 6, //  64 0x40
-		LED_DoNotDisturb_Bit = 1 << 7, // 128 0x80
+protected:
+
+	// duplicate some constants to keep the code of this class shorter
+	enum {
+		MIN_MODIFIER   = KBCommon::MIN_MODIFIER,
+		MAX_MODIFIER   = KBCommon::MAX_MODIFIER,
+		MAX_NORMAL_KEY = KBCommon::MAX_NORMAL_KEY,
+		NUM_BOOT_KEYS  = KBCommon::NUM_BOOT_KEYS,
+		MM_SC_OFFSET   = KBCommon::MM_SC_OFFSET,
 	};
 
 	// standard USB HID Boot Keyboard-compatible keyreport
@@ -120,8 +115,6 @@ public:
 		// which should help compatibility (reportedly some devices don't like >8 bytes)
 		uint16_t keys[NUM_MM_KEYS];
 	};
-
-protected:
 
 	BootKeyReport standardKeys = {};
 	ConsumerKeyReport mmKeys = {};

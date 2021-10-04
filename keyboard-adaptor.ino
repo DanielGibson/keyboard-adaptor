@@ -20,7 +20,7 @@ static uint16_t mapKey(uint16_t scancode)
 {
 	// See Chapter 10 "Keyboard/Keypad Page (0x07)" in hut1_21_0.pdf ("HID Usage Tables for USB")
 	// for the meaning of the scancode values ("Usage  ID") of "normal keys" (not multimedia keys)
-	if(scancode < EmulatedKeyboard::MM_SC_OFFSET)
+	if(scancode < KBCommon::MM_SC_OFFSET)
 	{
 		switch(uint8_t(scancode))
 		{
@@ -28,20 +28,20 @@ static uint16_t mapKey(uint16_t scancode)
 			case 0x39: // capslock
 				return 0xE4; // right CTRL
 			// NOTE: if you want to return a multimedia key here, you need to return
-			//       EmulatedKeyboard::MM_SC_OFFSET + mm_key_consumer_usage_ID; !
+			//       KBCommon::MM_SC_OFFSET + mm_key_consumer_usage_ID; !
 		}
 	}
 	else // "consumer page" key (multimedia key)
 	{
 		// See Chapter 15 "USB HID Consumer Page (0x0C)" in hut1_21_0.pdf
-		uint16_t consumerUsageID = scancode - EmulatedKeyboard::MM_SC_OFFSET;
+		uint16_t consumerUsageID = scancode - KBCommon::MM_SC_OFFSET;
 		switch(consumerUsageID)
 		{
 			// example: map the mute key to play/pause
 			case 0xE2: // Mute
-				return EmulatedKeyboard::MM_SC_OFFSET + 0xCD; // Play/Pause
+				return KBCommon::MM_SC_OFFSET + 0xCD; // Play/Pause
 			// NOTE that the scancodes for consumer page keys are
-			//      EmulatedKeyboard::MM_SC_OFFSET + consumer_usage_ID
+			//      KBCommon::MM_SC_OFFSET + consumer_usage_ID
 			//      (so they don't clash with the normal keyboard keys scancodes)
 		}
 	}

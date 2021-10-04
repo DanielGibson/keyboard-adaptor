@@ -98,9 +98,9 @@ static const uint8_t _hidReportDescriptorKeyboard[] PROGMEM = {
 	0x95, 0x06,                      /*   REPORT_COUNT (6) */
 	0x75, 0x08,                      /*   REPORT_SIZE (8) */
 	0x15, 0x00,                      /*   LOGICAL_MINIMUM (0) */
-	0x26, EmulatedKeyboard::MAX_NORMAL_KEY, 0, /* LOGICAL_MAXIMUM (231, RGUI) */
+	0x26, KBCommon::MAX_NORMAL_KEY, 0, /* LOGICAL_MAXIMUM (231, RGUI) */
 	0x19, 0x00,                      /*   USAGE_MINIMUM (Reserved (no event indicated)) */
-	0x29, EmulatedKeyboard::MAX_NORMAL_KEY, /* USAGE_MAXIMUM (231, RGUI) */
+	0x29, KBCommon::MAX_NORMAL_KEY, /* USAGE_MAXIMUM (231, RGUI) */
 	0x81, 0x00,                      /*   INPUT (Data,Ary,Abs) */
 
 	/* End */
@@ -270,9 +270,9 @@ bool EmulatedKeyboard::setup(USBSetup &setup)
 
 static uint8_t scancodeToModifierFlag(uint16_t scancode)
 {
-	if(scancode >= EmulatedKeyboard::MIN_MODIFIER && scancode <= EmulatedKeyboard::MAX_MODIFIER)
+	if(scancode >= KBCommon::MIN_MODIFIER && scancode <= KBCommon::MAX_MODIFIER)
 	{
-		return uint8_t(1 << (scancode - EmulatedKeyboard::MIN_MODIFIER));
+		return uint8_t(1 << (scancode - KBCommon::MIN_MODIFIER));
 	}
 	return 0;
 }

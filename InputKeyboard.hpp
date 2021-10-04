@@ -43,19 +43,19 @@
 #include "KeyboardCommon.hpp"
 
 #include <hidcomposite.h>
-// TODO: get rid of dependency to EmulatedKeyboard (duplicate some constants, put others in common header)
-#include "EmulatedKeyboard.hpp"
 
 class InputKeyboard : public HIDComposite
 {
 protected:
-	using EmuKB = EmulatedKeyboard;
+	enum {
+		NUM_MM_KEYS = 3 // 3 multimedia keys pressed at the same time should be more than enough
+	};
 
 	uint8_t curLedState = 0;
 
 	uint8_t oldModifierState = 0;
-	uint8_t oldNormalKeysState[EmuKB::NUM_BOOT_KEYS] = {};
-	uint16_t oldMMKeysState[EmuKB::NUM_MM_KEYS] = {}; // as consumer page usage ID, *not* EmuKB scancode!
+	uint8_t oldNormalKeysState[KBCommon::NUM_BOOT_KEYS] = {};
+	uint16_t oldMMKeysState[NUM_MM_KEYS] = {}; // as consumer page usage ID, *not* EmuKB scancode!
 
 	// the Ducky DK2108 uses 3bytes (24bits) for the state of some hardcoded multimedia keys
 	// so for that keyboard, oldDK2108MMkeyState is used instead of oldMMKeysState
@@ -148,7 +148,7 @@ public:
 	bool IsKeyPressed(uint16_t scancode) const;
 
 	// Sets the keyboards LEDs (for capslock, numlock etc)
-	// ledState is a bitmask, see EmulatedKeyboard::LED_*_Bit for values
+	// ledState is a bitmask, see KBCommon::LED_*_Bit for values
 	void SetLEDs(uint8_t ledState, bool force = false)
 	{
 		if(ledState != curLedState || force)

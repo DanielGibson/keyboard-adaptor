@@ -65,6 +65,9 @@ void InputKeyboard::DetectDevice()
 	bootKbdReportID = 0;
 	mmKeysEP = 0; // TODO: try to find a consumer control endpoint/report?
 	mmKeysReportID = 0;
+	// most keyboards seem to use the "normal" multimedia/consumer-control key
+	// format (16bit int keycodes), with exactly one key per report,
+	// i.e. only one multimedia key can be pressed at the same time
 	mmKeysNumKeys = 1;
 	mmKeyReportStyle = kCCreportNormal;
 
@@ -157,6 +160,7 @@ void InputKeyboard::DetectDevice()
 			// Example data (incl. Report ID!) when pressing 6 keys and then 'A':
 			// 01 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 			//     ^- that's the bit for 'A' (bit 1 for HID Usage ID 4, which is the "Usage Minimum" for that report)
+			// ^- Report ID
 			// (+ additional, independent, keyboard boot protocol report for the other 6 keys that's left out here)
 			break;
 		
@@ -215,12 +219,12 @@ void InputKeyboard::HandleBootKeyboardReport(const uint8_t* data, int len)
 	uint8_t diffBits = newModifierState ^ oldModifierState;
 	if(diffBits != 0)
 	{
-		for(uint8_t bitIdx=0; bitIdx < EmuKB::NUM_MODIFIERS; ++bitIdx)
+		for(uint8_t bitIdx=0; bitIdx < KBCommon::NUM_MODIFIERS; ++bitIdx)
 		{
 			uint8_t bit = 1 << bitIdx;
 			if(diffBits & bit)
 			{
-				uint16_t scancode = EmuKB::MIN_MODIFIER + bitIdx;
+				uint16_t scancode = KBCommon::MIN_MODIFIER + bitIdx;
 				bool pressed = (newModifierState & bit) != 0;
 				pressed ? OnKeyPress(scancode) : OnKeyRelease(scancode);
 			}
@@ -231,19 +235,19 @@ void InputKeyboard::HandleBootKeyboardReport(const uint8_t* data, int len)
 	// handle the normal keys
 
 	// from this point on, only byte 3 and above are of interest
-	len = min(len-2, EmuKB::NUM_BOOT_KEYS);
+	len = min(len-2, KBCommon::NUM_BOOT_KEYS);
 	const uint8_t* newKeys = &data[2];
 
 	for(uint8_t i=0; i < len; ++i)
 	{
 		uint8_t sc = newKeys[i];
-		if(sc != 0 && FindInArray(sc, oldNormalKeysState, EmuKB::NUM_BOOT_KEYS) == -1)
+		if(sc != 0 && FindInArray(sc, oldNormalKeysState, KBCommon::NUM_BOOT_KEYS) == -1)
 		{
 			OnKeyPress(sc); // if this key wasn't already pressed, press it now
 		}
 	}
 
-	for(uint8_t i=0; i < EmuKB::NUM_BOOT_KEYS; ++i)
+	for(uint8_t i=0; i < KBCommon::NUM_BOOT_KEYS; ++i)
 	{
 		uint8_t oldSc = oldNormalKeysState[i];
 		if(oldSc != 0 && FindInArray(oldSc, newKeys, len) == -1)
@@ -258,24 +262,24 @@ void InputKeyboard::HandleBootKeyboardReport(const uint8_t* data, int len)
 // NOTE: this expects that any Report ID is already skipped!
 void InputKeyboard::HandleNormalMultimediaKeyReport(const uint8_t* data, int len)
 {
-	uint8_t numNewKeys = min(len/2, EmuKB::NUM_MM_KEYS);
-	uint16_t newKeys[EmuKB::NUM_MM_KEYS];
+	uint8_t numNewKeys = min(len/2, NUM_MM_KEYS);
+	uint16_t newKeys[NUM_MM_KEYS];
 	for(uint8_t i=0; i < numNewKeys; ++i)
 	{
 		uint16_t usageID = data[2*i] + (uint16_t(data[2*i+1]) << 8);
 		newKeys[i] = usageID;
-		if(usageID != 0 && FindInArray(usageID, oldMMKeysState, EmuKB::NUM_MM_KEYS) == -1)
+		if(usageID != 0 && FindInArray(usageID, oldMMKeysState, NUM_MM_KEYS) == -1)
 		{
-			OnKeyPress(usageID + EmuKB::MM_SC_OFFSET); // remember: scancode is consumer key hid usageID + EmuKB::MM_SC_OFFSET
+			OnKeyPress(usageID + KBCommon::MM_SC_OFFSET); // remember: scancode is consumer key hid usageID + KBCommon::MM_SC_OFFSET
 		}
 	}
 
-	for(uint8_t i=0; i < EmuKB::NUM_MM_KEYS; ++i)
+	for(uint8_t i=0; i < NUM_MM_KEYS; ++i)
 	{
 		uint16_t oldUsageID = oldMMKeysState[i];
 		if(oldUsageID != 0 && FindInArray(oldUsageID, newKeys, numNewKeys) == -1)
 		{
-			OnKeyRelease(oldUsageID + EmuKB::MM_SC_OFFSET);
+			OnKeyRelease(oldUsageID + KBCommon::MM_SC_OFFSET);
 		}
 		oldMMKeysState[i] = (i<numNewKeys) ? newKeys[i] : 0;
 	}
@@ -307,7 +311,7 @@ void InputKeyboard::HandleDK2108MultimediaKeyReport(const uint8_t* data, int len
 				uint8_t bit = 1 << i;
 				if(diffBits & bit)
 				{
-					uint16_t scancode = DK2108BytesUsageIDs[byteIdx][i] + EmuKB::MM_SC_OFFSET;
+					uint16_t scancode = DK2108BytesUsageIDs[byteIdx][i] + KBCommon::MM_SC_OFFSET;
 					bool pressed = (newByte & bit) != 0;
 					pressed ? OnKeyPress(scancode) : OnKeyRelease(scancode);
 				}
@@ -360,9 +364,9 @@ void InputKeyboard::ParseHIDData(USBHID *hid, uint8_t ep, bool has_rpt_id, uint8
 					uint16_t oldUsageID = oldMMKeysState[0];
 					if(usageID != oldUsageID)
 					{
-						if(oldUsageID != 0)  OnKeyRelease(oldUsageID + EmuKB::MM_SC_OFFSET);
-						// remember: scancode is consumer key hid usage + EmuKB::MM_SC_OFFSET
-						if(usageID != 0)     OnKeyPress(usageID + EmuKB::MM_SC_OFFSET);
+						if(oldUsageID != 0)  OnKeyRelease(oldUsageID + KBCommon::MM_SC_OFFSET);
+						// remember: scancode is consumer key hid usage + KBCommon::MM_SC_OFFSET
+						if(usageID != 0)     OnKeyPress(usageID + KBCommon::MM_SC_OFFSET);
 						oldMMKeysState[0] = usageID;
 					}
 				}
@@ -433,21 +437,21 @@ bool InputKeyboard::IsKeyPressed(uint16_t scancode) const
 {
 	if(scancode != 0)
 	{
-		if(scancode >= EmuKB::MIN_MODIFIER && scancode <= EmuKB::MAX_MODIFIER )
+		if(scancode >= KBCommon::MIN_MODIFIER && scancode <= KBCommon::MAX_MODIFIER )
 		{
-			uint8_t bit = uint8_t(1 << (scancode - EmulatedKeyboard::MIN_MODIFIER));
+			uint8_t bit = uint8_t(1 << (scancode - KBCommon::MIN_MODIFIER));
 			return (oldModifierState & bit) != 0;
 		}
-		else if(scancode < EmuKB::MM_SC_OFFSET) // normal key
+		else if(scancode < KBCommon::MM_SC_OFFSET) // normal key
 		{
-			return FindInArray(uint8_t(scancode), oldNormalKeysState, EmuKB::NUM_BOOT_KEYS) != -1;
+			return FindInArray(uint8_t(scancode), oldNormalKeysState, KBCommon::NUM_BOOT_KEYS) != -1;
 		}
 		else if(mmKeysEP != 0) // multimedia key (and the keyboard has multimedia keys we know of)
 		{
-			uint16_t usageID = scancode - EmuKB::MM_SC_OFFSET;
+			uint16_t usageID = scancode - KBCommon::MM_SC_OFFSET;
 			if(mmKeyReportStyle == kCCreportNormal)
 			{
-				return FindInArray(usageID, oldMMKeysState, EmuKB::NUM_MM_KEYS) != -1;
+				return FindInArray(usageID, oldMMKeysState, NUM_MM_KEYS) != -1;
 			}
 			else if(mmKeyReportStyle == kCCreportDK2108)
 			{
