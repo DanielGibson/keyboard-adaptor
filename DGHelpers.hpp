@@ -42,6 +42,7 @@ struct HexPrinter final : public Printable
 
 	size_t printTo(Print& p) const override
 	{
+		// FIXME: THIS IS BROKEN!
 		// Number of nibbles
 		int numnibbles = sizeof(INT_T) * 2;
 

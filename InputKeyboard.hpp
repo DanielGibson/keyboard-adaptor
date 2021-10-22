@@ -58,8 +58,8 @@ protected:
 	uint16_t oldMMKeysState[NUM_MM_KEYS] = {}; // as consumer page usage ID, *not* EmuKB scancode!
 
 	// the Ducky DK2108 uses 3bytes (24bits) for the state of some hardcoded multimedia keys
-	// so for that keyboard, oldDK2108MMkeyState is used instead of oldMMKeysState
-	uint8_t oldDK2108MMkeyState[3] = {0, 0, 0};
+	// so for that keyboard, old24BitMMkeyState is used instead of oldMMKeysState
+	uint8_t old24BitMMkeyState[3] = {0, 0, 0};
 
 	uint8_t bootKbdEP = 0; // endpoint ID (0 = no boot keyboard device)
 	uint8_t bootKbdReportID = 0; // 0 = no report ID
@@ -73,6 +73,7 @@ protected:
 	enum : uint8_t {
 		kCCreportNormal = 0, // one or more 16bit values
 		kCCreportDK2108 = 1, // Like my Ducky 2108, bitmask with 24bits, each for one common multimedia key
+		kCCreportWinbondGaming = 2, // Winbond Gaming Keyboard - also 24bit bitmask, but different meaning per bit
 	} mmKeyReportStyle = kCCreportNormal;
 
 	// gets the vendor and product IDs from the connected keyboard
@@ -86,7 +87,7 @@ protected:
 		oldModifierState = 0;
 		memset(oldNormalKeysState, 0, sizeof(oldNormalKeysState));
 		memset(oldMMKeysState, 0, sizeof(oldMMKeysState));
-		memset(oldDK2108MMkeyState, 0, sizeof(oldDK2108MMkeyState));
+		memset(old24BitMMkeyState, 0, sizeof(old24BitMMkeyState));
 		SetLEDs(0, true);
 	}
 
@@ -104,7 +105,7 @@ protected:
 
 	// expects data[] to contain 3bytes (24bits) for some assorted multimedia keys
 	// NOTE: this expects that any Report ID is already skipped!
-	void HandleDK2108MultimediaKeyReport(const uint8_t* data, int len);
+	void Handle24BitMultimediaKeyReport(const uint8_t* data, int len);
 
 	// Called by the HIDComposite library
 	// Will be called for all HID data received from the USB interface

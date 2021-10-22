@@ -127,6 +127,19 @@ void InputKeyboard::DetectDevice()
 			// DK2108's default mode, supporting this is pointless (at least right now)
 			break;
 
+		// Winbond Gaming Keyboard (like the Pulsar PCMK TKL Barebone)
+		case CMB_USB_ID(0x0416, 0xb23c):
+			devName = F("Winbond Gaming/Pulsar");
+			// boot keyboard is 1, 0
+			mmKeysEP = 2;
+			mmKeysReportID = 2;
+			mmKeysNumKeys = 24; // 24 bits
+			mmKeyReportStyle = kCCreportWinbondGaming;
+
+			// TODO: detect Winbond NKRO (which is supposedly switchable with Fn+SDL_SCANCODE_GRAVE)?
+			// TODO: describe NKRO format (some kind of bitset, only used if more than 6 "normal" keys are pressed)
+			break;
+
 		// Darfon Electronics Corps - "QPAD Wired Keyboard" (tested with MK-75)
 		case CMB_USB_ID(0x0d62, 0xd99e):
 			devName = F("QPad Wired Keyboard (like MK-75)");
@@ -145,14 +158,14 @@ void InputKeyboard::DetectDevice()
 			//       ^- that's the bit for 'A' (bit 5 for HID Usage ID 4, as bit 0 aka 1 is used for usage ID 0)
 			// (+ additional, independent, keyboard boot protocol report for the other 6 keys that's left out here)
 			break;
-		
+
 		// SONiX (SPC Gear) GK630 Gaming Keyboard
 		case CMB_USB_ID(0x3299, 0x4e61):
 			devName = F("SPC Gear/SONiX GK630");
 			// boot keyboard is 1, 0
 			mmKeysEP = 2;
 			mmKeysReportID = 3;
-			
+
 			// For NKRO it uses EP 2 Report ID 1 - but only if more than 6 (non-modifier) keys
 			// are pressed, otherwise the boot keyboard device is used (which just works).
 			// There seem to be 16 bytes all in all: The Report ID and then 15 bytes (120 bits)
@@ -163,7 +176,7 @@ void InputKeyboard::DetectDevice()
 			// ^- Report ID
 			// (+ additional, independent, keyboard boot protocol report for the other 6 keys that's left out here)
 			break;
-		
+
 		// Cherry MX 10.0N
 		case CMB_USB_ID(0x046a, 0x00df):
 			devName = F("Cherry MX 10.0N");
@@ -285,6 +298,8 @@ void InputKeyboard::HandleNormalMultimediaKeyReport(const uint8_t* data, int len
 	}
 }
 
+
+
 // the HID consumer control Usage IDs associated with the bits of each input byte
 // in Ducky DK2108 multimedia key reports
 static constexpr uint16_t DK2108BytesUsageIDs[3][8] = {
@@ -293,17 +308,27 @@ static constexpr uint16_t DK2108BytesUsageIDs[3][8] = {
 	{ 0x194, 0x221, 0x223, 0x224, 0x225, 0x226, 0x227, 0x22a }
 };
 
+// the HID consumer control Usage IDs associated with the bits of each input byte
+// in "Winbond Gaming Keyboard" / Pulsar PCMK TKL Barebone multimedia key reports
+static constexpr uint16_t WinbondBytesUsageIDs[3][8] = {
+	{ 0x0e9, 0x0ea, 0x0e2, 0x0cd, 0x0b5, 0x0b6, 0x0b7, 0x0b8 },
+	{ 0x18a, 0x221, 0x22a, 0x223, 0x224, 0x225, 0x226, 0x227 },
+	{ 0x183, 0x196, 0x192, 0x19e, 0x194, 0x206, 0x0b2, 0x0b4 }
+};
+
 // expects data[] to contain 3bytes (24bits) for some assorted multimedia keys
 // NOTE: this expects that any Report ID is already skipped!
-void InputKeyboard::HandleDK2108MultimediaKeyReport(const uint8_t* data, int len)
+void InputKeyboard::Handle24BitMultimediaKeyReport(const uint8_t* data, int len)
 {
 	if(len < 3)
 		return;
 
+	const uint16_t (&codeTable)[3][8] = (mmKeyReportStyle == kCCreportDK2108) ? DK2108BytesUsageIDs : WinbondBytesUsageIDs;
+
 	for(uint8_t byteIdx=0; byteIdx < 3; ++byteIdx)
 	{
 		uint8_t newByte = data[byteIdx];
-		uint8_t diffBits = newByte ^ oldDK2108MMkeyState[byteIdx];
+		uint8_t diffBits = newByte ^ old24BitMMkeyState[byteIdx];
 		if(diffBits != 0)
 		{
 			for(uint8_t i=0; i < 8; ++i)
@@ -311,12 +336,12 @@ void InputKeyboard::HandleDK2108MultimediaKeyReport(const uint8_t* data, int len
 				uint8_t bit = 1 << i;
 				if(diffBits & bit)
 				{
-					uint16_t scancode = DK2108BytesUsageIDs[byteIdx][i] + KBCommon::MM_SC_OFFSET;
+					uint16_t scancode = codeTable[byteIdx][i] + KBCommon::MM_SC_OFFSET;
 					bool pressed = (newByte & bit) != 0;
 					pressed ? OnKeyPress(scancode) : OnKeyRelease(scancode);
 				}
 			}
-			oldDK2108MMkeyState[byteIdx] = newByte;
+			old24BitMMkeyState[byteIdx] = newByte;
 		}
 	}
 }
@@ -375,9 +400,9 @@ void InputKeyboard::ParseHIDData(USBHID *hid, uint8_t ep, bool has_rpt_id, uint8
 					HandleNormalMultimediaKeyReport(buf, len);
 				}
 			}
-			else if(mmKeyReportStyle == kCCreportDK2108 && len == 3)
+			else if(len == 3) // implicitly: && (mmKeyReportStyle == kCCreportDK2108 || mmKeyReportStyle == kCCreportWinbond)
 			{
-				HandleDK2108MultimediaKeyReport(buf, len);
+				Handle24BitMultimediaKeyReport(buf, len);
 			}
 		}
 	}
@@ -453,16 +478,18 @@ bool InputKeyboard::IsKeyPressed(uint16_t scancode) const
 			{
 				return FindInArray(usageID, oldMMKeysState, NUM_MM_KEYS) != -1;
 			}
-			else if(mmKeyReportStyle == kCCreportDK2108)
+			else // kCCreportDK2108 or kCCreportWinbondGaming
 			{
+				const uint16_t (&codeTable)[3][8] = (mmKeyReportStyle == kCCreportDK2108) ? DK2108BytesUsageIDs : WinbondBytesUsageIDs;
+
 				for(uint8_t byteIdx=0; byteIdx < 3; ++byteIdx)
 				{
 					for(uint8_t i=0; i < 8; ++i)
 					{
-						if(DK2108BytesUsageIDs[byteIdx][i] == usageID)
+						if(codeTable[byteIdx][i] == usageID)
 						{
 							uint8_t bit = uint8_t(1 << i);
-							return (oldDK2108MMkeyState[byteIdx] & bit) != 0;
+							return (old24BitMMkeyState[byteIdx] & bit) != 0;
 						}
 					}
 				}
