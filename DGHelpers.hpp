@@ -42,7 +42,6 @@ struct HexPrinter final : public Printable
 
 	size_t printTo(Print& p) const override
 	{
-		// FIXME: THIS IS BROKEN!
 		// Number of nibbles
 		int numnibbles = sizeof(INT_T) * 2;
 
@@ -53,13 +52,14 @@ struct HexPrinter final : public Printable
 		for (int n = numnibbles; n != 0; n--) {
 			// Extract nibble...
 			char nibble = (converted >> (4 * (n - 1))) & 0x0F;
-
-			// ...and print it.
+			// convert it to ASCII
 			if (nibble <= 9) {
-				p.print(nibble + '0');
+				nibble += '0';
 			} else {
-				p.print(nibble - 10 + 'A');
+				nibble += 'A' - 10;
 			}
+			// ...and print it.
+			p.print(nibble);
 		}
 
 		return numnibbles;
