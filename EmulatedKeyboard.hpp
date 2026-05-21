@@ -187,7 +187,7 @@ public:
 
 	// Keyboard LED bits, see LED_NumLock_Bit etc for values
 	// Example:
-	//  if(emuKB.GetLeds() & EmulatedKeyboard::LED_CapsLock_Bit) { print("CapsLock is active"); }
+	//  if(emuKB.GetLeds() & KBCommon::LED_CapsLock_Bit) { print("CapsLock is active"); }
 	uint8_t GetLeds() const
 	{
 		return leds;
