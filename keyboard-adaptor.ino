@@ -5,7 +5,7 @@
  * It uses the InputKeyboard class for input from a real keyboard via USB host shield
  * and the EmulatedKeyboard class to make the Arduino pretend to be a USB-keyboard
  * to the device (e.g. PC or KVM switch) it's connected to.
- * By un-commenting and adapting the mapKey() function you can map keys to other keys,
+ * By adjusting the mapKey() function you can map keys to other keys,
  * for example if you want the caps-lock key to behave like the right CTRL key.
  *
  * Note that you might have to also adjust InputKeyboard.cpp to support your keyboard,
@@ -16,15 +16,8 @@
  * A main goal of this adaptor is to improve compatibility with finicky devices that
  * don't support "fancy" multimedia keyboards too well, like many KVM switches.
  * For that it might be necessary to deactivate the "CDC" (USB serial console) device
- * of your Arduino. https://github.com/arduino/ArduinoCore-avr/pull/383 shows
- * a way to do this; however, even though this change has been merged it hasn't
- * been part of a release yet so you might have to apply that patch manually.
+ * of your Arduino. See README.md for details.
  *
- * Unfortunately, even with that patch, disabling isn't as easy as it should be,
- * because the Arduino IDE doesn't support setting compiler flags (it'd be -DCDC_DISABLED)
- * So if you're building with the Arduino IDE, you need to edit USBDesc.h
- * in your-arduino-install-dir/hardware/arduino/avr/cores/arduino/
- * and remove the "//" before "#define CDC_DISABLED".
  * NOTE THAT THIS WILL DISABLE THE SERIAL CONSOLE FOR ALL PROJECTS YOU BUILD!
  *
  * Also note that a disabled CDC makes flashing the Arduino a bit harder.
@@ -73,9 +66,11 @@ USB     UsbHost;
 // (like my old IBM thinkpad-style keyboard)?
 //USBHub     Hub(&Usb);
 
-#if 0 // TODO: if you wanna map keys to other keys, do it here (and uncomment the lines in OnKeyPress() and OnKeyRelease())
 static uint16_t mapKey(uint16_t scancode)
 {
+	// TODO: if you want to map keys to other keys, turn this into "#if 1"
+	//       and adjust the code below to your needs
+#if 0
 	// See Chapter 10 "Keyboard/Keypad Page (0x07)" in hut1_21_0.pdf ("HID Usage Tables for USB")
 	// for the meaning of the scancode values ("Usage  ID") of "normal keys" (not multimedia keys)
 	if(scancode < KBCommon::MM_SC_OFFSET)
@@ -103,9 +98,10 @@ static uint16_t mapKey(uint16_t scancode)
 			//      (so they don't clash with the normal keyboard keys scancodes)
 		}
 	}
+#endif // 0
+
 	return scancode;
 }
-#endif // 0
 
 class PassthroughKeyboard final : public InputKeyboard
 {
@@ -119,7 +115,7 @@ public:
 		PrintlnAll(F("PassthroughKeyboard::OnKeyPress( "), AsHex(scancode), F(" )") );
 #endif
 
-		// scancode = mapKey(scancode); // TODO: uncomment if you want to map keys to other keys
+		scancode = mapKey(scancode);
 
 		emuKB.Press(scancode);
 	}
@@ -131,7 +127,7 @@ public:
 		PrintlnAll(F("PassthroughKeyboard::OnKeyRelease( "), AsHex(scancode), F(" )") );
 #endif
 
-		// scancode = mapKey(scancode); // TODO: uncomment if you want to map keys to other keys
+		scancode = mapKey(scancode);
 
 		emuKB.Release(scancode);
 	}
