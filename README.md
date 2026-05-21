@@ -271,6 +271,12 @@ you can enable debug messages that are printed to the Serial console (if CDC is 
 Remember that you need a **3.3V** Pro Micro, because the Host Shield Mini only supports 3.3V at
 its pins and might otherwise get damaged!
 
+... or you just use a Leonardo with the full-size shield, it's much easier (but bigger):
+
+![](img/leonardo-comparison.jpg)  
+*Left: Pro Micro mounted on USB Host Shield Mini, Right: Full-size USB Host Shield on Arduino Leonardo (clone).  
+The Pro Micro version fits in a matchbox (not pictured).*
+
 ### Preparing the Pro Micro
 
 The *Pro Micro* has a Micro-USB port, and if that wasn't bad enough, it's also not attached
@@ -283,6 +289,9 @@ while glueing to prevent the glue from getting into the port.
 
 Result:  
 ![](img/glued.jpg)
+
+Note: On the pictures you can see that I gave the same treatment to the Mini Host Shield's USB-A port.
+That shouldn't be necessary.
 
 Another solution might be the [SparkFun Qwiic Pro Micro](https://www.sparkfun.com/sparkfun-qwiic-pro-micro-usb-c-atmega32u4.html)
 that has a USB-C port that hopefully has a better connection to the board.  
