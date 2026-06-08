@@ -189,7 +189,7 @@ EmulatedKeyboard is partly based on code from *NikoHood's* great [HID library](h
 (It does not use that library though, so you don't have to install it)
 
 I think this class is generally useful for all kinds of Arduino-based keyboards and keyboard-like
-devices (Numpads, Macro Keypads, ...), as long as don't need full [NKRO](https://en.wikipedia.org/wiki/Key_rollover).  
+devices (Numpads, Macro Keypads, ...), as long as you don't need full [NKRO](https://en.wikipedia.org/wiki/Key_rollover).  
 *6KRO* however is supported: 6 arbitrary "normal" keys can be pressed at once, **in addition to**
 the 8 modifier keys (Left/Right Shift, Ctrl, Alt, Win) that can also be pressed all at once.  
 Up to *three multimedia* keys can be pressed at once - this could be increased relatively easily,
@@ -281,7 +281,7 @@ The Pro Micro version fits in a matchbox (not pictured).*
 
 The *Pro Micro* has a Micro-USB port, and if that wasn't bad enough, it's also not attached
 to the board too strongly...  
-I recommend using hot-meld glue to stabilize that. When I did that, I protected the parts of the board
+I recommend using hot-melt glue to stabilize that. When I did that, I protected the parts of the board
 I didn't want glue on with tape and stuck a slightly wet toothpick (with tip removed) into the port
 while glueing to prevent the glue from getting into the port.
 
@@ -299,9 +299,10 @@ By default it uses 5V, but has "VCC" jumper pads on the back that allow running 
 the "Jumpers" section in the [hookup guide](https://learn.sparkfun.com/tutorials/qwiic-pro-micro-usb-c-atmega32u4-hookup-guide/hardware-overview)).  
 Note that I haven't tried the "Qwiic Pro Micro", I just think it *should* work.
 
-There are also cheap Chinese Pro Micro ripoffs with USB-C port, but those seem to run with 5V so
-they're not suitable for using with the USB Host Shield Mini. Furthermore I read that their USB-C
-connector isn't completely standards-conformant and USB-C-to-USB-C cables won't work.
+There are also cheap Chinese Pro Micro ripoffs with USB-C port, but those seem to run with 5V
+(based on the original Pro Micro design, not Qwiic Pro Micro) so they're not suitable for use
+with the USB Host Shield Mini. Furthermore I read that their USB-C connector isn't completely
+standards-conformant so USB-C-to-USB-C cables won't work.
 
 ### Connecting the Pro Micro and the USB Host Shield Mini
 
@@ -378,9 +379,9 @@ plug a jumper cable to the pins.
 ![](img/full-top.jpg)  
 The Pro Micro's `RST` pin is *not* connected to the Host Shields pin below it - it wouldn't matter
 though, that pin is not used by the Host Shield (it's the one between `3.3V` and `GND`).  
-But by leaving it out, there is a handy hap for the wire to the *Host Shield's Reset*.
+But by leaving it out, there is a handy gap for the wire to the *Host Shield's Reset*.
 
 
 ![](img/full-bottom.jpg)  
 Note that the Host Shield's `RESET` pin is *not* directly connected to the Pro Micro (with a header),
-but only to a wire that is not really visible here (only it's solder bump). The Pro Micro's pin at that position is one of the `GND` pins, next to `RX`.
+but only to a wire that is not really visible here (only its solder bump). The Pro Micro's pin at that position is one of the `GND` pins, next to `RX`.
