@@ -1,5 +1,9 @@
 # USB-to-USB keyboard adaptor for Arduinos with USB Host Shield
 
+<a href="https://blog.gibson.sh/job/" title="Daniel is currently available for hire - click for details!"><picture>
+<img  align="right" width="90" height="100" alt="Hire Me!" src="https://dhewm3.org/hireme-180-shadow2.png" />
+</picture></a>
+
 This project allows creating an adapter that turns supported gaming keyboards with too many or
 confusing endpoints *(for finicky hardware like KVM switches, ancient operating systems and similar
 cases that lack full HID support)* into a basic USB "Boot protocol" keyboard with one additional
